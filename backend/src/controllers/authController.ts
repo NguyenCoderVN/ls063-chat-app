@@ -1,9 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import type { AuthRequest } from "../middleware/auth";
 import { User } from "../models/User";
-import { getAuth } from "@clerk/express";
+import { getAuth, clerkClient } from "@clerk/express";
 
-// todo: add the next later
 export async function getMe(
   req: AuthRequest,
   res: Response,
@@ -38,19 +37,25 @@ export async function authCallback(
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
+
     let user = await User.findOne({ clerkId });
+
     if (!user) {
-      //get user info from clerk and save to db
-      const clerkUser = await req.clerk.users.getUser(clerkId);
+      // 2. Use clerkClient instead of req.clerk
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+
+      const primaryEmail = clerkUser.emailAddresses[0]?.emailAddress;
+
       user = await User.create({
         clerkId,
         name: clerkUser.firstName
           ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
-          : clerkUser.emailAddress[0]?.emailAddress?.split("@")[0],
-        email: clerkUser.emailAddress[0]?.emailAddress,
+          : primaryEmail?.split("@")[0],
+        email: primaryEmail,
         avatar: clerkUser.imageUrl,
       });
     }
+
     res.json(user);
   } catch (error) {
     res.status(500);

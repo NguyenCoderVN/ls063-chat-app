@@ -1,7 +1,8 @@
 import type { NextFunction, Response } from "express";
+import { Types } from "mongoose";
+
 import type { AuthRequest } from "../middleware/auth";
 import { Chat } from "../models/Chat";
-import { Types } from "mongoose";
 import { User } from "../models/User";
 
 export async function getChats(
@@ -68,7 +69,7 @@ export async function getOrCreateChat(
         .json({ message: "Cannot create chat with yourself" });
       return;
     }
-    // check if chat already exists
+
     let chat = await Chat.findOne({
       participants: { $all: [userId, participantId] },
     })
