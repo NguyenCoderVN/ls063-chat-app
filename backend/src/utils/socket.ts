@@ -1,13 +1,9 @@
 import { verifyToken } from "@clerk/express";
 import { Server as HttpServer } from "http";
-import { Socket, Server as SocketServer } from "socket.io";
+import { Server as SocketServer } from "socket.io";
 import { Message } from "../models/Message";
 import { User } from "../models/User"; // Ensure this is imported
 import { Chat } from "../models/Chat"; // Ensure this is imported
-
-interface SocketWithUserId extends Socket {
-  userId: string;
-}
 
 export const onlineUsers: Map<string, string> = new Map();
 
@@ -15,8 +11,8 @@ export const initializeSocket = (httpServer: HttpServer) => {
   const allowedOrigins = [
     "http://localhost:8081",
     "http://localhost:5173",
-    process.env.FRONTEND_URL as string,
-  ].filter(Boolean); // Clean up undefined values
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[]; // Clean up undefined values
 
   const io = new SocketServer(httpServer, {
     cors: {
@@ -43,7 +39,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
       if (!user) return next(new Error("User not found"));
 
       // Cast socket and attach userId
-      (socket as SocketWithUserId).userId = user._id.toString();
+      socket.data.userId = user._id.toString();
       next();
     } catch (error: any) {
       next(new Error("Authentication error: Invalid token"));
@@ -51,7 +47,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
   });
 
   io.on("connection", (socket) => {
-    const userId = (socket as SocketWithUserId).userId;
+    const userId = socket.data.userId;
 
     // Track online status
     onlineUsers.set(userId, socket.id);
@@ -102,14 +98,11 @@ export const initializeSocket = (httpServer: HttpServer) => {
           chat.lastMessageAt = new Date();
           await chat.save();
 
-          await message.populate("sender", "name email avatar");
+          await message.populate("sender", "name avatar");
 
-          // Emit to everyone in the chat room (including sender if they joined)
           io.to(`chat:${chatId}`).emit("new-message", message);
 
-          // Optional: Notify participants who aren't currently "in" the chat UI
-          // via their private user rooms (useful for global notifications)
-          chat.participants.forEach((pId: string) => {
+          chat.participants.forEach((pId) => {
             if (pId.toString() !== userId) {
               io.to(`user:${pId}`).emit(
                 "message-notification",
