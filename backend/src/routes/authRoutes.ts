@@ -3,9 +3,7 @@ import { protectRoute } from "../middleware/auth";
 import { getMe } from "../controllers/authController";
 import { authCallback } from "../controllers/authController";
 
-const router = Router();
+export const authRoutes = Router();
 
-router.get("/me", protectRoute, getMe);
-router.post("/callback", authCallback);
-
-export default router;
+authRoutes.get("/me", protectRoute, getMe);
+authRoutes.post("/callback", authCallback);

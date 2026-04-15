@@ -41,7 +41,6 @@ export async function authCallback(
     let user = await User.findOne({ clerkId });
 
     if (!user) {
-      // 2. Use clerkClient instead of req.clerk
       const clerkUser = await clerkClient.users.getUser(clerkId);
 
       const primaryEmail = clerkUser.emailAddresses[0]?.emailAddress;
