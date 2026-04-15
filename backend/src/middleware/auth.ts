@@ -11,8 +11,6 @@ export const protectRoute = [
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { userId: clerkId } = getAuth(req);
-      // if (!clerkId)
-      //   return res.status(401).json({ message: "Unauthorized" });
 
       const user = await User.findOne({ clerkId });
       if (!user)
