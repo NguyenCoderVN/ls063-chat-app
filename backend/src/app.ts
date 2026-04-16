@@ -20,4 +20,12 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRouters);
 app.use(errorHandler);
 
+if (process.env.NODE_ENV === "production") {
+  app.use(expres.static(path.join(__dirname, "../../web/dist")));
+
+  app.get("/{*any}", (_, res) => {
+    res.sendFile(path.join(__dirname, "../../web/dist/index.html"));
+  });
+}
+
 export default app;
