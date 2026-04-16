@@ -5,6 +5,7 @@ import { authRoutes } from "./routes/authRoutes";
 import { chatRoutes } from "./routes/chatRoutes";
 import { messageRoutes } from "./routes/messageRoutes";
 import { userRouters } from "./routes/userRoutes";
+import path from "path";
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use("/api/users", userRouters);
 app.use(errorHandler);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(expres.static(path.join(__dirname, "../../web/dist")));
+  app.use(express.static(path.join(__dirname, "../../web/dist")));
 
   app.get("/{*any}", (_, res) => {
     res.sendFile(path.join(__dirname, "../../web/dist/index.html"));
