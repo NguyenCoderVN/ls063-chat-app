@@ -8,6 +8,12 @@ WORKDIR /app/web
 COPY web/package.json web/bun.lock* ./
 RUN bun install --frozen-lockfile
 COPY web/ ./
+# Truyền biến từ Kinsta vào quá trình build của Docker
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+
+# Sau đó mới chạy lệnh build
+RUN bun run build
 RUN bun run build
 
 # install backend dependencies
